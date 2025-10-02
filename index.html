@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pneumonia Prediction AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <style>
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .container {
+      text-align: center;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #00ffe7;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      color: #aaa;
+    }
+
+    /* Toggle */
+    .mode-toggle {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      background-color: #555;
+      border-radius: 26px;
+      top: 0; left: 0; right: 0; bottom: 0;
+      transition: .4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px; width: 20px;
+      left: 3px; bottom: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: .4s;
+    }
+
+    input:checked + .slider {
+      background-color: #00ffe7;
+    }
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    /* Upload / Demo Sections */
+    .upload-box, .demo-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .upload-label {
+      padding: 0.8rem 1.5rem;
+      background: #111;
+      color: #00ffe7;
+      border: 2px dashed #00ffe7;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .upload-label:hover {
+      background: #00ffe7;
+      color: #111;
+    }
+
+    #preview {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      border: 2px solid #00ffe7;
+      margin-top: 1rem;
+    }
+
+    button {
+      padding: 0.8rem 2rem;
+      background: #00ffe7;
+      color: #111;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background: #00aaff;
+      color: white;
+    }
+
+    .result-box {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      background: rgba(0,255,231,0.1);
+      border: 1px solid #00ffe7;
+    }
+    .hidden { display: none; }
+
+    /* Demo Gallery */
+    .demo-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+      width: 100%;
+    }
+
+    .demo-gallery img {
+      width: 100%;
+      border-radius: 10px;
+      border: 2px solid #00ffe7;
+      cursor: pointer;
+      transition: transform 0.3s ease, border 0.3s ease;
+    }
+    .demo-gallery img:hover {
+      transform: scale(1.05);
+      border-color: #00aaff;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      z-index: 1000;
+    }
+    .modal.active { visibility: visible; }
+    .modal-content {
+      background: rgba(255,255,255,0.05);
+      padding: 2rem;
+      border-radius: 15px;
+      backdrop-filter: blur(20px);
+      text-align: center;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .modal-content img {
+      max-width: 100%;
+      margin: 1rem 0;
+      border-radius: 12px;
+      border: 2px solid #00ffe7;
+    }
+    .close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 2rem;
+      color: #fff;
+      cursor: pointer;
+    }
+    .close:hover { color: #00ffe7; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Pneumonia Prediction AI</h1>
+    <p class="subtitle">Upload a chest X-ray or try demo images</p>
+
+    <!-- Toggle -->
+    <div class="mode-toggle">
+      <span>Live</span>
+      <label class="switch">
+        <input type="checkbox" id="modeToggle">
+        <span class="slider"></span>
+      </label>
+      <span>Demo</span>
+    </div>
+
+    <!-- Live Mode -->
+    <div id="liveMode" class="upload-box">
+      <input type="file" id="fileInput" accept="image/*" hidden>
+      <label for="fileInput" class="upload-label">Choose an X-ray</label>
+      <img id="preview" src="" alt="Preview" hidden>
+      <button id="predictBtn">Predict</button>
+      <div id="result" class="result-box hidden"></div>
+    </div>
+
+    <!-- Demo Mode -->
+    <div id="demoMode" class="demo-section hidden">
+      <h2>Demo Images</h2>
+      <div id="demoGallery" class="demo-gallery"></div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="demoModal" class="modal">
+    <div class="modal-content">
+      <span id="closeModal" class="close">&times;</span>
+      <h2>Demo Image Preview</h2>
+      <img id="modalPreview" src="" alt="Demo Preview">
+      <button id="demoPredictBtn">Predict</button>
+      <div id="demoResult" class="result-box hidden"></div>
+    </div>
+  </div>
+
+  <script>
+    const modeToggle = document.getElementById("modeToggle");
+    const liveMode = document.getElementById("liveMode");
+    const demoMode = document.getElementById("demoMode");
+
+    // Toggle live/demo
+    modeToggle.addEventListener("change", () => {
+      if (modeToggle.checked) {
+        liveMode.classList.add("hidden");
+        demoMode.classList.remove("hidden");
+      } else {
+        demoMode.classList.add("hidden");
+        liveMode.classList.remove("hidden");
+      }
+    });
+
+    // Live Mode
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
+    const predictBtn = document.getElementById("predictBtn");
+    const resultBox = document.getElementById("result");
+    let selectedFile = null;
+
+    fileInput.addEventListener("change", (e) => {
+      selectedFile = e.target.files[0];
+      if (selectedFile) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          preview.src = ev.target.result;
+          preview.hidden = false;
+        };
+        reader.readAsDataURL(selectedFile);
+      }
+    });
+
+    predictBtn.addEventListener("click", async () => {
+      if (!selectedFile) return alert("Select an image first!");
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      try {
+        const res = await fetch("http://127.0.0.1:5000/predict", { method: "POST", body: formData });
+        const data = await res.json();
+        resultBox.innerHTML = `<b>Prediction:</b> ${data.prediction}<br><b>Confidence:</b> ${(data.confidence*100).toFixed(2)}%`;
+        resultBox.classList.remove("hidden");
+      } catch (err) {
+        resultBox.textContent = "Error connecting to API";
+        resultBox.classList.remove("hidden");
+      }
+    });
+
+    // Demo Mode
+    const demoGallery = document.getElementById("demoGallery");
+    const demoModal = document.getElementById("demoModal");
+    const modalPreview = document.getElementById("modalPreview");
+    const closeModal = document.getElementById("closeModal");
+    const demoPredictBtn = document.getElementById("demoPredictBtn");
+    const demoResult = document.getElementById("demoResult");
+    let selectedDemoUrl = null;
+
+    async function loadDemoImages() {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/demo-images");
+        const data = await res.json();
+        data.images.forEach(url => {
+          const img = document.createElement("img");
+          img.src = url;
+          img.addEventListener("click", () => {
+            selectedDemoUrl = url;
+            modalPreview.src = url;
+            demoModal.classList.add("active");
+            demoResult.classList.add("hidden");
+            demoResult.innerHTML = "";
+          });
+          demoGallery.appendChild(img);
+        });
+      } catch (err) {
+        console.error("Error loading demo images:", err);
+      }
+    }
+    loadDemoImages();
+
+    closeModal.addEventListener("click", () => {
+      demoModal.classList.remove("active");
+      selectedDemoUrl = null;
+    });
+
+    demoPredictBtn.addEventListener("click", async () => {
+      if (!selectedDemoUrl) return;
+      let formData = new FormData();
+      formData.append("demo_url", selectedDemoUrl);
+      try {
+        const res = await fetch("http://127.0.0.1:5000/predict", { method: "POST", body: formData });
+        const data = await res.json();
+        demoResult.innerHTML = `<b>Prediction:</b> ${data.prediction}<br><b>Confidence:</b> ${(data.confidence*100).toFixed(2)}%`;
+        demoResult.classList.remove("hidden");
+      } catch (err) {
+        demoResult.textContent = "Error connecting to API";
+        demoResult.classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>
